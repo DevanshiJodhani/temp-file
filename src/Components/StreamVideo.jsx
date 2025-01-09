@@ -3,13 +3,15 @@ import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import API from '../api';
 import { UserContext } from '../Context/UserContext';
-import Alert from "./Alert"
+import Alert from './Alert';
 
 const StreamVideo = () => {
   const { videoId } = useParams();
   const { user } = useContext(UserContext);
   const [isLiked, setIsLiked] = useState(false);
+  const [isDisliked, setIsDisliked] = useState(false);
   const [commentLikes, setCommentLikes] = useState([]);
+  const [commentDislikes, setCommentDislikes] = useState([]);
   const [visibleDeleteIndex, setVisibleDeleteIndex] = useState(null);
   const [video, setVideo] = useState(null);
   const [comments, setComments] = useState([]);
@@ -30,18 +32,13 @@ const StreamVideo = () => {
         const response = await API.get(`/api/v1/videos/${videoId}`);
         const fetchedVideo = response.data.video;
         setVideo(fetchedVideo);
+
         setIsLiked(fetchedVideo.isLiked || false);
+        setIsDisliked(fetchedVideo.isDisliked || false);
 
-        // Set comment likes based on the fetched data
-        const initialCommentLikes = fetchedVideo.comments?.map(
-          (comment) => comment.isLiked || false
-        );
-        setCommentLikes(initialCommentLikes || []);
-
-        // Fetch subscription status if user is logged in
         if (user) {
           const subscriptionResponse = await API.get(
-            `/api/v1/subscriptions/c/${video.owner._id}`
+            `/api/v1/subscriptions/c/${fetchedVideo.owner._id}`
           );
           setIsSubscribed(subscriptionResponse.data.subscribed);
         }
@@ -57,6 +54,9 @@ const StreamVideo = () => {
         const fetchedComments = response.data.data.commentsData;
         setComments(fetchedComments); // set comments in state
         setCommentLikes(fetchedComments.map((comment) => comment.isLiked)); // Initialize likes state
+        setCommentDislikes(
+          fetchedComments.map((comment) => comment.isDisliked)
+        ); // Initialize dislike state
       } catch (error) {
         console.error('Error while fetching the video comments: ', error);
       }
@@ -92,30 +92,75 @@ const StreamVideo = () => {
   // Toggle Video Like
   const handleLikeClick = async () => {
     try {
-      const response = await API.post(`/api/v1/likes/toggle/v/${videoId}`);
+      const response = await API.post(`/api/v1/likes/toggle/v/like/${videoId}`);
       const { isLiked } = response.data;
 
       setIsLiked(isLiked);
+
       setVideo((prevVideo) => ({
         ...prevVideo,
         likesCount: isLiked
           ? prevVideo.likesCount + 1
           : prevVideo.likesCount - 1,
+        dislikesCount:
+          isDisliked && isLiked
+            ? prevVideo.dislikesCount - 1
+            : prevVideo.dislikesCount,
       }));
+
+      // If like is activated, ensure dislike is deactivated
+      if (isLiked) {
+        setIsDisliked(false);
+      }
     } catch (error) {
       console.error('Error toggling like on video: ', error);
+    }
+  };
+
+  // Toggle Video Dislike
+  const handleDislikeClick = async () => {
+    try {
+      const response = await API.post(
+        `/api/v1/likes/toggle/v/dislike/${videoId}`
+      );
+      const { isDisliked } = response.data;
+
+      setIsDisliked(isDisliked);
+
+      setVideo((prevVideo) => ({
+        ...prevVideo,
+        dislikesCount: isDisliked
+          ? prevVideo.dislikesCount + 1
+          : prevVideo.dislikesCount - 1,
+        likesCount:
+          isDisliked && isLiked
+            ? prevVideo.likesCount - 1
+            : prevVideo.likesCount,
+      }));
+
+      // If dislike is activated, ensure like is deactivated
+      if (isDisliked) {
+        setIsLiked(false);
+      }
+    } catch (error) {
+      console.error('Error toggling dislike on video: ', error);
     }
   };
 
   // Toggle Comments Like
   const toggleCommentLike = async (index, commentId) => {
     try {
-      const resposne = await API.post(`/api/v1/likes/toggle/c/${commentId}`);
-
-      const { isLiked } = resposne.data;
+      const response = await API.post(
+        `/api/v1/likes/toggle/c/like/${commentId}`
+      );
+      const { isLiked } = response.data;
 
       setCommentLikes((prevLikes) =>
         prevLikes.map((like, i) => (i === index ? isLiked : like))
+      );
+
+      setCommentDislikes((prevDislikes) =>
+        prevDislikes.map((dislike, i) => (i === index ? false : dislike))
       );
 
       setComments((prevComments) =>
@@ -126,6 +171,10 @@ const StreamVideo = () => {
               totalLikes: isLiked
                 ? comment.totalLikes + 1
                 : comment.totalLikes - 1,
+              totalDislikes:
+                commentDislikes[i] && isLiked
+                  ? comment.totalDislikes - 1
+                  : comment.totalDislikes,
             };
           }
           return comment;
@@ -133,6 +182,44 @@ const StreamVideo = () => {
       );
     } catch (error) {
       console.error('Error toggling like on comment: ', error);
+    }
+  };
+
+  // Toggle comments dislike
+  const toggleCommentDislike = async (index, commentId) => {
+    try {
+      const response = await API.post(
+        `/api/v1/likes/toggle/c/dislike/${commentId}`
+      );
+      const { isDisliked } = response.data;
+
+      setCommentDislikes((prevDislikes) =>
+        prevDislikes.map((dislike, i) => (i === index ? isDisliked : dislike))
+      );
+
+      setCommentLikes((prevLikes) =>
+        prevLikes.map((like, i) => (i === index ? false : like))
+      );
+
+      setComments((prevComments) =>
+        prevComments.map((comment, i) => {
+          if (i === index) {
+            return {
+              ...comment,
+              totalDislikes: isDisliked
+                ? comment.totalDislikes + 1
+                : comment.totalDislikes - 1,
+              totalLikes:
+                commentLikes[i] && isDisliked
+                  ? comment.totalLikes - 1
+                  : comment.totalLikes,
+            };
+          }
+          return comment;
+        })
+      );
+    } catch (error) {
+      console.error('Error toggling dislike on comment: ', error);
     }
   };
 
@@ -251,8 +338,10 @@ const StreamVideo = () => {
                 <i className={isLiked ? 'bx bxs-like' : 'bx bx-like'}></i>
                 <span>{video.likesCount}</span>
               </Like>
-              <Unlike>
-                <i className="bx bx-dislike"></i>
+              <Unlike onClick={handleDislikeClick}>
+                <i
+                  className={isDisliked ? 'bx bxs-dislike' : 'bx bx-dislike'}
+                ></i>
               </Unlike>
             </LikeComponent>
           </Information>
@@ -302,8 +391,18 @@ const StreamVideo = () => {
                             ></i>
                             <span>{comment.totalLikes}</span>
                           </CommentLike>
-                          <CommentUnlike>
-                            <i className="bx bx-dislike"></i>
+                          <CommentUnlike
+                            onClick={() =>
+                              toggleCommentDislike(index, comment._id)
+                            }
+                          >
+                            <i
+                              className={
+                                commentDislikes[index]
+                                  ? 'bx bxs-dislike'
+                                  : 'bx bx-dislike'
+                              }
+                            ></i>
                           </CommentUnlike>
                         </CommentLikeComponent>
                       </CommentDetails>
@@ -448,11 +547,16 @@ const Button = styled.button`
   padding: 16px 30px;
   border: none;
   outline: none;
-  border-radius: 50px;
   font-size: 18px;
   font-weight: 600;
+  color: #fff;
   cursor: pointer;
-  background: ${(props) => (props.isSubscribed ? '#aaa' : '#fff')};
+  border-radius: 10px;
+  background-color: ${({ isSubscribed }) =>
+    isSubscribed ? '#444444' : '#ff0000'};
+  &:hover {
+    opacity: 0.8;
+  }
 `;
 
 const DeleteVideo = styled.button`
