@@ -327,8 +327,7 @@ const StreamVideo = () => {
               ) : (
                 <Button
                   onClick={handleSubscriptionToggle}
-                  isSubscribed={isSubscribed}
-                >
+                  isSubscribed={isSubscribed}>
                   {isSubscribed ? 'Subscribed' : 'Subscribe'}
                 </Button>
               )}
@@ -339,9 +338,11 @@ const StreamVideo = () => {
                 <span>{video.likesCount}</span>
               </Like>
               <Unlike onClick={handleDislikeClick}>
+                <span>{video.dislikesCount}</span>
                 <i
-                  className={isDisliked ? 'bx bxs-dislike' : 'bx bx-dislike'}
-                ></i>
+                  className={
+                    isDisliked ? 'bx bxs-dislike' : 'bx bx-dislike'
+                  }></i>
               </Unlike>
             </LikeComponent>
           </Information>
@@ -380,29 +381,25 @@ const StreamVideo = () => {
                           <CommentLike
                             onClick={() =>
                               toggleCommentLike(index, comment._id)
-                            }
-                          >
+                            }>
                             <i
                               className={
                                 commentLikes[index]
                                   ? 'bx bxs-like'
                                   : 'bx bx-like'
-                              }
-                            ></i>
+                              }></i>
                             <span>{comment.totalLikes}</span>
                           </CommentLike>
                           <CommentUnlike
                             onClick={() =>
                               toggleCommentDislike(index, comment._id)
-                            }
-                          >
+                            }>
                             <i
                               className={
                                 commentDislikes[index]
                                   ? 'bx bxs-dislike'
                                   : 'bx bx-dislike'
-                              }
-                            ></i>
+                              }></i>
                           </CommentUnlike>
                         </CommentLikeComponent>
                       </CommentDetails>
@@ -410,12 +407,10 @@ const StreamVideo = () => {
                     <Right>
                       <i
                         class="bx bx-dots-vertical-rounded"
-                        onClick={() => toggleDeleteButton(index)}
-                      ></i>
+                        onClick={() => toggleDeleteButton(index)}></i>
                       {visibleDeleteIndex === index && (
                         <Delete
-                          onClick={() => handleDeleteComment(comment._id)}
-                        >
+                          onClick={() => handleDeleteComment(comment._id)}>
                           Delete
                         </Delete>
                       )}
@@ -607,6 +602,10 @@ const Unlike = styled.div`
   align-items: center;
   i {
     font-size: 30px;
+  }
+  span {
+    margin: 0 10px;
+    font-size: 20px;
   }
 `;
 
