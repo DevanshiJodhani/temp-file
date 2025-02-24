@@ -400,6 +400,7 @@ const StreamVideo = () => {
                                   ? 'bx bxs-dislike'
                                   : 'bx bx-dislike'
                               }></i>
+                            <span>{comment.totalDislikes}</span>
                           </CommentUnlike>
                         </CommentLikeComponent>
                       </CommentDetails>
@@ -726,6 +727,10 @@ const CommentUnlike = styled.div`
   align-items: center;
   i {
     font-size: 20px;
+  }
+  span {
+    margin: 0 10px;
+    font-size: 16px;
   }
 `;
 
