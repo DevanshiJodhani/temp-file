@@ -28,7 +28,7 @@ const Overlay = styled.div`
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -36,30 +36,36 @@ const Overlay = styled.div`
 `;
 
 const AlertContainer = styled.div`
-  background: #fff;
-  padding: 40px;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #0d1117, #131921);
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   text-align: center;
+  width: 350px;
+  color: #fff;
 `;
 
 const Message = styled.p`
   margin: 0;
-  font-size: 22px;
-  color: #333;
+  font-size: 24px;
+  font-weight: 600;
+  color: #ffcc00;
 `;
 
 const Button = styled.button`
-  margin-top: 30px;
+  margin-top: 35px;
   padding: 16px 30px;
   background: #007bff;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
   color: #fff;
   font-size: 18px;
+  font-weight: bold;
   cursor: pointer;
+  transition: background 0.3s ease-in-out;
+  
   &:hover {
-    background: #0056b3;
+    background: #005ec3;
   }
 `;
 
