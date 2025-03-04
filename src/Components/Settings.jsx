@@ -11,6 +11,7 @@ const Settings = () => {
     isOpen: false,
     redirectTo: null,
   });
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     username: '',
@@ -43,6 +44,11 @@ const Settings = () => {
     if (file) {
       setCover(file);
     }
+  };
+
+  // Confirming popup
+  const handleDeleteConfirm = () => {
+    setShowDeleteConfirm(true);
   };
 
   // Updating Avatar
@@ -125,6 +131,25 @@ const Settings = () => {
       setUpdatePassword({ currentPassword: '', newPassword: '' });
     } catch (error) {
       console.error('Error while updating password: ', error);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      await API.delete('/api/v1/users/deleteMe');
+      setAlert({
+        message: 'Your account has been deleted successfully!',
+        isOpen: true,
+        redirectTo: '/',
+      });
+    } catch (error) {
+      console.error('Error deleting account: ', error);
+      setAlert({
+        message: 'Error deleting account. Please try again later.',
+        isOpen: true,
+      });
+    } finally {
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -243,6 +268,25 @@ const Settings = () => {
           <Button onClick={handleUpdatePassword}>Update Password</Button>
         </Updater>
       </Content>
+      <Content>
+        <h3>Deleting your account is permanent. Proceed with caution!</h3>
+        <Button onClick={handleDeleteConfirm}>Delete Account</Button>
+      </Content>
+
+      {/* Confirmation Popup */}
+      {showDeleteConfirm && (
+        <PopupOverlay>
+          <Popup>
+            <p>Are you sure you want to delete your account?</p>
+            <PopupButtons>
+              <ConfirmButton onClick={handleDeleteAccount}>Yes</ConfirmButton>
+              <CancelButton onClick={() => setShowDeleteConfirm(false)}>
+                No
+              </CancelButton>
+            </PopupButtons>
+          </Popup>
+        </PopupOverlay>
+      )}
     </Container>
   );
 };
@@ -263,6 +307,13 @@ const Content = styled.div`
   margin: 40px auto;
   display: flex;
   justify-content: space-between;
+
+  h3 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+  }
 `;
 
 const Updater = styled.div`
@@ -393,6 +444,58 @@ const UpdatePassword = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
+`;
+
+const PopupOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+`;
+
+const Popup = styled.div`
+  background: #0d1117;
+  color: #ffcc00;
+  padding: 30px;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 18px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+`;
+
+const PopupButtons = styled.div`
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+`;
+
+const ConfirmButton = styled.button`
+  background: #ff0000;
+  color: #fff;
+  border: none;
+  padding: 16px 30px;
+  border-radius: 5px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  cursor: pointer;
+  &:hover {
+    background: #f22f2f;
+  }
+`;
+
+const CancelButton = styled(ConfirmButton)`
+  background: #5bc0de;
+  &:hover {
+    background: #31b0d5;
+  }
 `;
 
 export default Settings;
